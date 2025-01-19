@@ -33,7 +33,7 @@ for /f "tokens=6 delims=[]. " %%i in ('ver') do set build=%%i
 
 if %build% LSS 17763 (
     echo =============================================================
-    echo The script is compatible only with Windows 10 v1809 and later
+    echo 该脚本仅兼容 Windows 10 v1809 及更高版本
     echo =============================================================
     echo.
     pause
@@ -44,7 +44,7 @@ reg query HKU\S-1-5-19 1>nul 2>nul
 if %ERRORLEVEL% equ 0 goto :START_SCRIPT
 
 echo =====================================================
-echo This script needs to be executed as an administrator.
+echo 该脚本需要以管理员身份执行。
 echo =====================================================
 echo.
 pause
@@ -57,18 +57,18 @@ if %ERRORLEVEL% equ 0 set "FlightSigningEnabled=1"
 
 :CHOICE_MENU
 cls
-title OfflineInsiderEnroll v%scriptver%
+title 离线加入 Insider v%scriptver%
 set "choice="
 echo.
-echo 0 - Canary Channel
-echo 1 - Dev Channel
-echo 2 - Beta Channel
-echo 3 - Release Preview Channel
+echo 0 - Canary 通道
+echo 1 - Dev 通道
+echo 2 - Beta 通道
+echo 3 - Release Preview 通道
 echo.
-echo 4 - Stop receiving Windows Insider builds
-echo 5 - Quit without making any changes
+echo 4 - 停止接收 Windows Insider 内部版本
+echo 5 - 退出而不做任何更改
 echo.
-set /p choice="Choice: "
+set /p choice="选择: "
 echo.
 if /I "%choice%"=="0" goto :ENROLL_CAN
 if /I "%choice%"=="1" goto :ENROLL_DEV
@@ -80,7 +80,7 @@ goto :CHOICE_MENU
 
 :ENROLL_RP
 set "Channel=ReleasePreview"
-set "Fancy=Release Preview Channel"
+set "Fancy=Release Preview 通道"
 set "BRL=8"
 set "Content=Mainline"
 set "Ring=External"
@@ -89,7 +89,7 @@ goto :ENROLL
 
 :ENROLL_BETA
 set "Channel=Beta"
-set "Fancy=Beta Channel"
+set "Fancy=Beta 通道"
 set "BRL=4"
 set "Content=Mainline"
 set "Ring=External"
@@ -98,7 +98,7 @@ goto :ENROLL
 
 :ENROLL_DEV
 set "Channel=Dev"
-set "Fancy=Dev Channel"
+set "Fancy=Dev 通道"
 set "BRL=2"
 set "Content=Mainline"
 set "Ring=External"
@@ -107,7 +107,7 @@ goto :ENROLL
 
 :ENROLL_CAN
 set "Channel=CanaryChannel"
-set "Fancy=Canary Channel"
+set "Fancy=Canary 通道"
 set "BRL="
 set "Content=Mainline"
 set "Ring=External"
@@ -153,7 +153,7 @@ reg add "HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\WindowsSelfHost\Applicability" /f
 reg add "HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\WindowsSelfHost\Applicability" /f /t REG_SZ /v Ring /d "%Ring%"
 reg add "HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\WindowsSelfHost\Applicability" /f /t REG_SZ /v ContentType /d "%Content%"
 reg add "HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\WindowsSelfHost\Applicability" /f /t REG_SZ /v BranchName /d "%Channel%"
-if %build% LSS 21990 reg add "HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\WindowsSelfHost\UI\Strings" /f /t REG_SZ /v StickyXaml /d "<StackPanel xmlns="^""http://schemas.microsoft.com/winfx/2006/xaml/presentation"^""><TextBlock Style="^""{StaticResource BodyTextBlockStyle }"^"">This device has been enrolled to the Windows Insider program using OfflineInsiderEnroll v%scriptver%. If you want to change settings of the enrollment or stop receiving Windows Insider builds, please use the script. <Hyperlink NavigateUri="^""https://github.com/abbodi1406/offlineinsiderenroll"^"" TextDecorations="^""None"^"">Learn more</Hyperlink></TextBlock><TextBlock Text="^""Applied configuration"^"" Margin="^""0,20,0,10"^"" Style="^""{StaticResource SubtitleTextBlockStyle}"^"" /><TextBlock Style="^""{StaticResource BodyTextBlockStyle }"^"" Margin="^""0,0,0,5"^""><Run FontFamily="^""Segoe MDL2 Assets"^"">&#xECA7;</Run> <Span FontWeight="^""SemiBold"^"">%Fancy%</Span></TextBlock><TextBlock Text="^""Channel: %Channel%"^"" Style="^""{StaticResource BodyTextBlockStyle }"^"" /><TextBlock Text="^""Content: %Content%"^"" Style="^""{StaticResource BodyTextBlockStyle }"^"" /><TextBlock Text="^""Telemetry settings notice"^"" Margin="^""0,20,0,10"^"" Style="^""{StaticResource SubtitleTextBlockStyle}"^"" /><TextBlock Style="^""{StaticResource BodyTextBlockStyle }"^"">Windows Insider Program requires your diagnostic data collection settings to be set to <Span FontWeight="^""SemiBold"^"">Full</Span>. You can verify or modify your current settings in <Span FontWeight="^""SemiBold"^"">Diagnostics &amp; feedback</Span>.</TextBlock><Button Command="^""{StaticResource ActivateUriCommand}"^"" CommandParameter="^""ms-settings:privacy-feedback"^"" Margin="^""0,10,0,0"^""><TextBlock Margin="^""5,0,5,0"^"">Open Diagnostics &amp; feedback</TextBlock></Button></StackPanel>"
+if %build% LSS 21990 reg add "HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\WindowsSelfHost\UI\Strings" /f /t REG_SZ /v StickyXaml /d "<StackPanel xmlns="^""http://schemas.microsoft.com/winfx/2006/xaml/presentation"^""><TextBlock Style="^""{StaticResource BodyTextBlockStyle }"^"">此设备已使用 OfflineInsiderEnroll v%scriptver% 注册到 Windows 预览体验计划。如果您想更改注册设置或停止接收 Windows Insider 内部版本，请使用脚本。<Hyperlink NavigateUri="^""https://github.com/abbodi1406/offlineinsiderenroll"^"" TextDecorations="^""None"^"">了解更多</Hyperlink></TextBlock><TextBlock Text="^""Applied configuration"^"" Margin="^""0,20,0,10"^"" Style="^""{StaticResource SubtitleTextBlockStyle}"^"" /><TextBlock Style="^""{StaticResource BodyTextBlockStyle }"^"" Margin="^""0,0,0,5"^""><Run FontFamily="^""Segoe MDL2 Assets"^"">&#xECA7;</Run> <Span FontWeight="^""SemiBold"^"">%Fancy%</Span></TextBlock><TextBlock Text="^""通道: %Channel%"^"" Style="^""{StaticResource BodyTextBlockStyle }"^"" /><TextBlock Text="^""内容: %Content%"^"" Style="^""{StaticResource BodyTextBlockStyle }"^"" /><TextBlock Text="^""遥测设置通知"^"" Margin="^""0,20,0,10"^"" Style="^""{StaticResource SubtitleTextBlockStyle}"^"" /><TextBlock Style="^""{StaticResource BodyTextBlockStyle }"^"">Windows 预览体验计划需要将您的诊断数据收集设置为<Span FontWeight="^""SemiBold"^"">完整</Span>。 您可以在<Span FontWeight="^""SemiBold"^"">诊断 &amp; 反馈</Span> 验证或修改当前设置。</TextBlock><Button Command="^""{StaticResource ActivateUriCommand}"^"" CommandParameter="^""ms-settings:privacy-feedback"^"" Margin="^""0,10,0,0"^""><TextBlock Margin="^""5,0,5,0"^"">打开诊断 &amp; 反馈</TextBlock></Button></StackPanel>"
 reg add "HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\WindowsSelfHost\UI\Visibility" /f /t REG_DWORD /v UIHiddenElements /d 65535
 reg add "HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\WindowsSelfHost\UI\Visibility" /f /t REG_DWORD /v UIDisabledElements /d 65535
 reg add "HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\WindowsSelfHost\UI\Visibility" /f /t REG_DWORD /v UIServiceDrivenElementVisibility /d 0
@@ -202,7 +202,7 @@ if %build% LSS 21990 goto :EOF
 echo Windows Registry Editor Version 5.00
 echo.
 echo [HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\WindowsSelfHost\UI\Strings]
-echo "StickyMessage"="{\"Message\":\"Device Enrolled Using OfflineInsiderEnroll\",\"LinkTitle\":\"\",\"LinkUrl\":\"\",\"DynamicXaml\":\"^<StackPanel xmlns=\\\"http://schemas.microsoft.com/winfx/2006/xaml/presentation\\\"^>^<TextBlock Style=\\\"{StaticResource BodyTextBlockStyle }\\\"^>This device has been enrolled to the Windows Insider program using OfflineInsiderEnroll v%scriptver%. If you want to change settings of the enrollment or stop receiving Windows Insider builds, please use the script. ^<Hyperlink NavigateUri=\\\"https://github.com/abbodi1406/offlineinsiderenroll\\\" TextDecorations=\\\"None\\\"^>Learn more^</Hyperlink^>^</TextBlock^>^<TextBlock Text=\\\"Applied configuration\\\" Margin=\\\"0,20,0,10\\\" Style=\\\"{StaticResource SubtitleTextBlockStyle}\\\" /^>^<TextBlock Style=\\\"{StaticResource BodyTextBlockStyle }\\\" Margin=\\\"0,0,0,5\\\"^>^<Run FontFamily=\\\"Segoe MDL2 Assets\\\"^>^&#xECA7;^</Run^> ^<Span FontWeight=\\\"SemiBold\\\"^>%Fancy%^</Span^>^</TextBlock^>^<TextBlock Text=\\\"Channel: %Channel%\\\" Style=\\\"{StaticResource BodyTextBlockStyle }\\\" /^>^<TextBlock Text=\\\"Content: %Content%\\\" Style=\\\"{StaticResource BodyTextBlockStyle }\\\" /^>^<TextBlock Text=\\\"Telemetry settings notice\\\" Margin=\\\"0,20,0,10\\\" Style=\\\"{StaticResource SubtitleTextBlockStyle}\\\" /^>^<TextBlock Style=\\\"{StaticResource BodyTextBlockStyle }\\\"^>Windows Insider Program requires your diagnostic data collection settings to be set to ^<Span FontWeight=\\\"SemiBold\\\"^>Full^</Span^>. You can verify or modify your current settings in ^<Span FontWeight=\\\"SemiBold\\\"^>Diagnostics ^&amp; feedback^</Span^>.^</TextBlock^>^<Button Command=\\\"{StaticResource ActivateUriCommand}\\\" CommandParameter=\\\"ms-settings:privacy-feedback\\\" Margin=\\\"0,10,0,0\\\"^>^<TextBlock Margin=\\\"5,0,5,0\\\"^>Open Diagnostics ^&amp; feedback^</TextBlock^>^</Button^>^</StackPanel^>\",\"Severity\":0}"
+echo "StickyMessage"="{\"Message\":\"设备已使用 OfflineInsiderEnroll 注册\",\"LinkTitle\":\"\",\"LinkUrl\":\"\",\"DynamicXaml\":\"^<StackPanel xmlns=\\\"http://schemas.microsoft.com/winfx/2006/xaml/presentation\\\"^>^<TextBlock Style=\\\"{StaticResource BodyTextBlockStyle }\\\"^>此设备已使用 OfflineInsiderEnroll v%scriptver% 注册到 Windows 预览体验计划。如果您想更改注册设置或停止接收 Windows Insider 内部版本，请使用脚本。 ^<Hyperlink NavigateUri=\\\"https://github.com/abbodi1406/offlineinsiderenroll\\\" TextDecorations=\\\"None\\\"^>了解更多^</Hyperlink^>^</TextBlock^>^<TextBlock Text=\\\"已应用的配置\\\" Margin=\\\"0,20,0,10\\\" Style=\\\"{StaticResource SubtitleTextBlockStyle}\\\" /^>^<TextBlock Style=\\\"{StaticResource BodyTextBlockStyle }\\\" Margin=\\\"0,0,0,5\\\"^>^<Run FontFamily=\\\"Segoe MDL2 Assets\\\"^>^&#xECA7;^</Run^> ^<Span FontWeight=\\\"SemiBold\\\"^>%Fancy%^</Span^>^</TextBlock^>^<TextBlock Text=\\\"通道: %Channel%\\\" Style=\\\"{StaticResource BodyTextBlockStyle }\\\" /^>^<TextBlock Text=\\\"内容: %Content%\\\" Style=\\\"{StaticResource BodyTextBlockStyle }\\\" /^>^<TextBlock Text=\\\"遥测设置通知\\\" Margin=\\\"0,20,0,10\\\" Style=\\\"{StaticResource SubtitleTextBlockStyle}\\\" /^>^<TextBlock Style=\\\"{StaticResource BodyTextBlockStyle }\\\"^>Windows 预览体验计划需要将您的诊断数据收集设置为^<Span FontWeight=\\\"SemiBold\\\"^>完整^</Span^>。 您可以在^<Span FontWeight=\\\"SemiBold\\\"^>诊断 ^&amp; 反馈^</Span^>验证或修改当前设置。 ^</TextBlock^>^<Button Command=\\\"{StaticResource ActivateUriCommand}\\\" CommandParameter=\\\"ms-settings:privacy-feedback\\\" Margin=\\\"0,10,0,0\\\"^>^<TextBlock Margin=\\\"5,0,5,0\\\"^>打开诊断 ^&amp; 反馈^</TextBlock^>^</Button^>^</StackPanel^>\",\"Severity\":0}"
 echo.
 )>"%SystemRoot%\oie.reg"
 reg.exe import "%SystemRoot%\oie.reg"
@@ -210,33 +210,33 @@ del /f /q "%SystemRoot%\oie.reg"
 goto :EOF
 
 :ENROLL
-echo Applying changes...
+echo 正在应用更改...
 call :RESET_INSIDER_CONFIG 1>NUL 2>NUL
 call :ADD_INSIDER_CONFIG 1>NUL 2>NUL
 bcdedit /set {current} flightsigning yes >nul 2>&1
-echo Done.
+echo 完成。
 
 echo.
 if %FlightSigningEnabled% neq 1 goto :ASK_FOR_REBOOT
-echo Press any key to exit.
+echo 按任意键退出。
 pause >nul
 goto :EOF
 
 :STOP_INSIDER
-echo Applying changes...
+echo 正在应用更改...
 call :RESET_INSIDER_CONFIG 1>nul 2>nul
 bcdedit /deletevalue {current} flightsigning >nul 2>&1
-echo Done.
+echo 完成。
 
 echo.
 if %FlightSigningEnabled% neq 0 goto :ASK_FOR_REBOOT
-echo Press any key to exit.
+echo 按任意键退出。
 pause >nul
 goto :EOF
 
 :ASK_FOR_REBOOT
 set "choice="
-echo A reboot is required to finish applying changes.
-set /p choice="Would you like to reboot your PC? (y/N) "
+echo 需要重新启动才能应用更改。
+set /p choice="你想重新启动你的电脑吗? (y/N) "
 if /I "%choice%"=="y" shutdown -r -t 0
 goto :EOF
