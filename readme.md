@@ -1,59 +1,42 @@
-# OfflineInsiderEnroll
+# OfflineInsiderEnroll 
 
-![Screenshot of OfflineInsiderEnroll](https://i.imgur.com/8HGi1w8.png)
+![OfflineInsiderEnroll 的截图](https://i.imgur.com/90s1hli.png)
 
-## Description
+## 介绍
 
-OfflineInsiderEnroll is a simple Windows Command Prompt script to enable access
-to the Windows Insider Program on machines not signed in with Microsoft Account.
+OfflineInsiderEnroll 是一个简单的 Windows 命令提示符脚本，用于在未使用 Microsoft 帐户登录的计算机上加入 Windows 预览体验计划。
 
-This script is compatible only with Windows 11 or Windows 10 version 1809 and later.
+此脚本仅与 Windows 11 或 Windows 10 版本 1809 及更高版本兼容。
 
-* Chinese (Simplified) fork: [简体中文](https://github.com/wkywky123123/offlineinsiderenroll)
+## 使用方法
 
-## Usage
+此脚本需要管理员权限才能运行。您只需右键单击它并 > `以管理员身份运行`。
 
-This script requires administrative priviliges to run. You can simply execute it
-by right clicking it > `Run as Administrator`.
+### 安装和配置更改
 
-### Installation and configuration changes
+启动后，脚本会提供 __*Windows 预览体验计划*__ 频道的选项。
+要进行选择，请按与所选选项对应的字母，然后按回车。
 
-After starting, the script offers selection of __*Windows Insider Program*__ channels.
-To make a selection, press a letter coresponding to option you choose and press
-ENTER.
+如果机器未注册预览体验计划，系统将提示您重新启动电脑以启用 *`Windows 预览体验计划`* 所需的 *`Microsoft Flight 签名`*
 
-If the machine was not enrolled to the Insider Program, you will get prompted to
-restart your machine to enable *`Microsoft Flight Signing`* which is required by
-*`Windows Insider Program`*.
 
-**Notice:** Windows Insider Program requires telemetry to be set to *`Full`*.
-After enrolling your machine to the *Windows Insider Program* please make sure
-that your diagnostic data collection settings are set to *`Full`*. Some `Insider
-Preview` builds may not get offered in *`Windows Update`* if you do not have
-correct telemetry settings.
+**注意:** Windows 预览体验计划要求将诊断数据收集设置为 *`完整`*。
+将您的电脑注册到 *Windows Insider 计划* 后，请确保您的诊断数据收集设置已设置为 *`完整`*。如果您没有正确设置，某些 `预览体验` 版本可能无法在 *`Windows 更新`* 中提供。
+您可以按如下方式验证或修改遥测设置：
 
-You can verify or modify your telemetry settings as follows:
+__Windows 11__: *`设置`* > *`隐私和安全性`* > *`诊断和反馈`*
 
-__Windows 11__: *`Settings`* > *`Privacy and Security`* > *`Diagnostics & feedback`*
+__Windows 10__: *`设置`* > *`隐私`* > *`诊断和反馈`*
 
-__Windows 10__: *`Settings`* > *`Privacy`* > *`Diagnostics & Feedback`*
+### 将 Windows 预览体验计划恢复为默认选项
 
-### Restoring Windows Insider Program to default options
+要将 *`Windows 预览体验计划`* 恢复为默认设置，只需在 `OfflineInsiderEnroll 脚本` 中选择 `停止接收 Windows 预览体验计划内部版本`。系统将提示您重新启动，因为此选项将禁用 *`Microsoft Flight 签名`*。
 
-To restore *`Windows Insider Program`* to default settings simply choose `Stop
-receiving Insider Preview builds` in `OfflineInsiderEnroll Script`. You will get prompted
-to reboot, because this option will disable *`Microsoft Flight Signing`*.
+## 这是如何运作的？
 
-## How does this work?
+此脚本利用了未公开的 `TestFlags`注册表值。
+如果将此值设置为`0x20`，则对在线 *Windows 预览体验计划*服务的所有访问都将被禁用。因此，我们可以设置自己的 *Windows 预览体验计划*值，而不会被 Windows 预览体验计划服务的数据覆盖。而且因为 `Windows Update` 不会检查电脑是否真的注册到预览体验计划，所以只需在注册表中设置正确的值，即可获得*预览体验计划*版本。
 
-This script takes advantage of undocumented `TestFlags` registry value.
-If this value is set to `0x20`, all access to online *Windows Insider* services
-gets disabled. Because of this, we can set our own *Windows Insider Preview*
-configuration without being overriden by the contact to the service. Since
-`Windows Update` does not check if machine is actually enrolled to the program,
-you will get offered *Insider Preview* builds by just setting correct values in
-the registry.
+## 许可
 
-## License
-
-This project is licensed under the MIT License. See `LICENSE` for details.
+该项目采用 MIT 许可证。详情请参阅 `LICENSE`。

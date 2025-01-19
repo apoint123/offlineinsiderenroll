@@ -57,7 +57,7 @@ if %ERRORLEVEL% equ 0 set "FlightSigningEnabled=1"
 
 :CHOICE_MENU
 cls
-title 离线加入 Insider v%scriptver%
+title OfflineInsiderEnroll v%scriptver%
 set "choice="
 echo.
 echo 0 - Canary 通道
@@ -65,7 +65,7 @@ echo 1 - Dev 通道
 echo 2 - Beta 通道
 echo 3 - Release Preview 通道
 echo.
-echo 4 - 停止接收 Windows Insider 内部版本
+echo 4 - 停止接收 Windows 预览体验计划内部版本
 echo 5 - 退出而不做任何更改
 echo.
 set /p choice="选择: "
