@@ -1,6 +1,6 @@
 # OfflineInsiderEnroll 
 
-![OfflineInsiderEnroll 的截图](https://i.imgur.com/90s1hli.png)
+![OfflineInsiderEnroll 的截图](https://i.imgur.com/zXduO1l.png)
 
 ## 介绍
 
