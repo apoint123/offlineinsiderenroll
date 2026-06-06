@@ -1,6 +1,7 @@
 @setlocal DisableDelayedExpansion
 @echo off
-set "scriptver=2.6.4"
+chcp 65001 >nul
+set "scriptver=2.6.6"
 
 set "_args=%*"
 set "_elv="
@@ -23,17 +24,17 @@ start %SystemRoot%\SysArm32\cmd.exe /c ""!_cmdf!" -arm %*"
 exit /b
 )
 set "SysPath=%SystemRoot%\System32"
-set "Path=%SystemRoot%\System32;%SystemRoot%\System32\Wbem;%SystemRoot%\System32\WindowsPowerShell\v1.0\"
+set "Path=%SystemRoot%\System32;%SystemRoot%;%SystemRoot%\System32\Wbem;%SystemRoot%\System32\WindowsPowerShell\v1.0\"
 if exist "%SystemRoot%\Sysnative\reg.exe" (
 set "SysPath=%SystemRoot%\Sysnative"
-set "Path=%SystemRoot%\Sysnative;%SystemRoot%\Sysnative\Wbem;%SystemRoot%\Sysnative\WindowsPowerShell\v1.0\;%Path%"
+set "Path=%SystemRoot%\Sysnative;%SystemRoot%;%SystemRoot%\Sysnative\Wbem;%SystemRoot%\Sysnative\WindowsPowerShell\v1.0\;%Path%"
 )
 
 for /f "tokens=6 delims=[]. " %%i in ('ver') do set build=%%i
 
 if %build% LSS 17763 (
     echo =============================================================
-    echo ¸Ã½Å±¾½ö¼æÈİ Windows 10 v1809 ¼°¸ü¸ß°æ±¾
+    echo æœ¬è„šæœ¬ä»…å…¼å®¹ Windows 10 v1809 åŠæ›´é«˜ç‰ˆæœ¬çš„ç³»ç»Ÿ
     echo =============================================================
     echo.
     pause
@@ -44,77 +45,115 @@ reg query HKU\S-1-5-19 1>nul 2>nul
 if %ERRORLEVEL% equ 0 goto :START_SCRIPT
 
 echo =====================================================
-echo ¸Ã½Å±¾ĞèÒªÒÔ¹ÜÀíÔ±Éí·İÖ´ĞĞ¡£
+echo è¯·ä»¥ç®¡ç†å‘˜èº«ä»½è¿è¡Œæ­¤è„šæœ¬ã€‚
 echo =====================================================
 echo.
 pause
 goto :EOF
 
 :START_SCRIPT
+set "Content=Mainline"
+set "Ring=External"
+set "RID=11"
+set "uiVersion=0"
+set "cleanup=0"
 set "FlightSigningEnabled=0"
 bcdedit /enum {current} | findstr /I /R /C:"^flightsigning *Yes$" >nul 2>&1
 if %ERRORLEVEL% equ 0 set "FlightSigningEnabled=1"
+set _bld=1
+for /f "tokens=2 delims=[]" %%G in ('ver') do for /f "tokens=4 delims=. " %%# in ("%%~G") do set _bld=%%#
+set "_wis=26220+"
+if %_bld% geq 26300 set "_wis=%_bld%+"
+if %_bld% equ 28000 set "_wis=28020"
+if %_bld% lss 22000 set "_wis=22635"
+if %_bld% lss 19041 set "_wis=19045"
+set "_wif=26300+"
+if %_bld% geq 28000 set "_wif=28020+"
+if %_bld% geq 29500 set "_wif=%_bld%+"
+set _can2=0
+if %_bld% lss 27000 if %_bld% geq 19041 set _can2=1
+set _srv=0
+if exist "%SystemRoot%\Servicing\Packages\Microsoft-Windows-Server*Edition~*.mum" set _srv=1
 
 :CHOICE_MENU
 cls
 title OfflineInsiderEnroll v%scriptver%
 set "choice="
 echo.
-echo 0 - Canary Í¨µÀ
-echo 1 - Dev Í¨µÀ
-echo 2 - Beta Í¨µÀ
-echo 3 - Release Preview Í¨µÀ
+echo ---- ä½“éªŒç‰ˆæœ¬                      ^| é¢‘é“    ^| ç›®æ ‡ç‰ˆæœ¬    ---
 echo.
-echo 4 - Í£Ö¹½ÓÊÕ Windows Ô¤ÀÀÌåÑé¼Æ»®ÄÚ²¿°æ±¾
-echo 5 - ÍË³ö¶ø²»×öÈÎºÎ¸ü¸Ä
+echo. 1 - å®éªŒæ€§ [æœªæ¥å¹³å°]             ^| Canary  ^| 29500+
+if %_srv% equ 0 (
+if %_can2% equ 1 echo. 2 - å®éªŒæ€§ [26H1]                 ^| Canary  ^| 28020+
+echo. 3 - å®éªŒæ€§                        ^| Dev     ^| %_wif%
+echo. 4 - Beta ^(æµ‹è¯•é¢‘é“^)               ^| Beta    ^| %_wis%
+)
+echo. 5 - Release Preview ^(å‘å¸ƒé¢„è§ˆ^)    ^| RP      ^| %_bld% / ä¸‹ä¸€ä¸ª RTM
+echo --------------------------------------------------------
 echo.
-set /p choice="Ñ¡Ôñ: "
+echo. 6 - åˆ·æ–° Windows æ›´æ–°æ‰«æç¼“å­˜
+echo. 7 - é‡ç½® Windows é¢„è§ˆä½“éªŒè®¡åˆ’é…ç½®
+echo. 8 - é€€å‡ºè®¡åˆ’å¹¶åœæ­¢æ¥æ”¶é¢„è§ˆç‰ˆæ›´æ–°
+echo. 9 - é€€å‡ºè„šæœ¬ ^(ä¸ä½œä»»ä½•æ›´æ”¹^)
 echo.
-if /I "%choice%"=="0" goto :ENROLL_CAN
-if /I "%choice%"=="1" goto :ENROLL_DEV
-if /I "%choice%"=="2" goto :ENROLL_BETA
-if /I "%choice%"=="3" goto :ENROLL_RP
-if /I "%choice%"=="4" goto :STOP_INSIDER
-if /I "%choice%"=="5" goto :EOF
+set /p choice="è¯·é€‰æ‹©: "
+echo.
+if /I "%choice%"=="1" goto :ENROLL_CAN
+if %_srv% equ 0 (
+if /I "%choice%"=="2" if %_can2% equ 1 goto :ENROLL_26H
+if /I "%choice%"=="3" goto :ENROLL_DEV
+if /I "%choice%"=="4" goto :ENROLL_BETA
+)
+if /I "%choice%"=="5" goto :ENROLL_RP
+if /I "%choice%"=="6" goto :REFRESH_WU
+if /I "%choice%"=="7" goto :STOP_INSIDER
+if /I "%choice%"=="8" (set cleanup=1&goto :STOP_INSIDER)
+if /I "%choice%"=="9" goto :EOF
 goto :CHOICE_MENU
 
 :ENROLL_RP
 set "Channel=ReleasePreview"
-set "Fancy=Release Preview Í¨µÀ"
-set "BRL=8"
-set "Content=Mainline"
-set "Ring=External"
-set "RID=11"
-goto :ENROLL
+set "uiChannel=ReleasePreview"
+set "uiBranch=%Channel%"
+set "Fancy=Release Preview ^(å‘å¸ƒé¢„è§ˆé¢‘é“^)"
+goto :doENROLL
 
 :ENROLL_BETA
 set "Channel=Beta"
-set "Fancy=Beta Í¨µÀ"
-set "BRL=4"
-set "Content=Mainline"
-set "Ring=External"
-set "RID=11"
-goto :ENROLL
+set "uiChannel=Beta"
+set "uiBranch=%Channel%"
+set "Fancy=Beta ^(æµ‹è¯•é¢‘é“^)"
+goto :doENROLL
 
 :ENROLL_DEV
 set "Channel=Dev"
-set "Fancy=Dev Í¨µÀ"
-set "BRL=2"
-set "Content=Mainline"
-set "Ring=External"
-set "RID=11"
-goto :ENROLL
+set "uiChannel=Dev"
+set "uiBranch=%Channel%"
+set "Fancy=Experimental ^(å®éªŒæ€§é¢‘é“^)"
+if %_bld% lss 27000 set "uiVersion=26200"
+goto :doENROLL
+
+:ENROLL_26H
+set "Channel=CanaryChannel"
+set "uiChannel=Canary"
+set "uiBranch=Dev"
+set "Fancy=Experimental [26H1] ^(å®éªŒæ€§é¢‘é“^)"
+set "uiVersion=28000"
+goto :doENROLL
 
 :ENROLL_CAN
 set "Channel=CanaryChannel"
-set "Fancy=Canary Í¨µÀ"
-set "BRL="
-set "Content=Mainline"
-set "Ring=External"
-set "RID=11"
-goto :ENROLL
+set "uiChannel=Canary"
+set "uiBranch=%Channel%"
+set "Fancy=Experimental [Future Platforms] ^(å®éªŒæ€§æœªæ¥å¹³å°é¢‘é“^)"
+if %_bld% lss 29500 set "uiVersion=0xffffffff"
+if %_bld% geq 26100 set "uiBranch=Dev"
+goto :doENROLL
 
 :RESET_INSIDER_CONFIG
+if %cleanup% equ 1 reg delete "HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\WindowsSelfHost\FIDs" /f
+if %cleanup% equ 1 reg delete "HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\WindowsSelfHost\OneSettings" /f
+reg delete "HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\WindowsUpdate\UX\Settings" /f /v FlightSettingsMaxPauseDays
 reg delete "HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\WindowsSelfHost\Account" /f
 reg delete "HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\WindowsSelfHost\Applicability" /f
 reg delete "HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\WindowsSelfHost\Cache" /f
@@ -130,9 +169,18 @@ reg delete "HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\Windows
 reg delete "HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\WindowsUpdate\SLS\Programs\RingInsiderFast" /f
 reg delete "HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\Policies\DataCollection" /f /v AllowTelemetry
 reg delete "HKEY_LOCAL_MACHINE\SOFTWARE\Policies\Microsoft\Windows\DataCollection" /f /v AllowTelemetry
+reg delete "HKEY_LOCAL_MACHINE\SOFTWARE\Policies\Microsoft\Windows\DataCollection" /f /v AllowTelemetry_PolicyManager
+reg delete "HKEY_LOCAL_MACHINE\SOFTWARE\Policies\Microsoft\Windows\DataCollection" /f /v DisableOneSettingsDownloads
+reg delete "HKEY_LOCAL_MACHINE\SOFTWARE\Policies\Microsoft\Windows\PreviewBuilds" /f /v AllowBuildPreview
 reg delete "HKEY_LOCAL_MACHINE\SOFTWARE\Policies\Microsoft\Windows\WindowsUpdate" /f /v BranchReadinessLevel
+reg delete "HKEY_LOCAL_MACHINE\SOFTWARE\Policies\Microsoft\Windows\WindowsUpdate" /f /v ManagePreviewBuilds
+reg delete "HKEY_LOCAL_MACHINE\SOFTWARE\Policies\Microsoft\Windows\WindowsUpdate" /f /v ManagePreviewBuildsPolicyValue
+reg delete "HKEY_LOCAL_MACHINE\SOFTWARE\Policies\Microsoft\Windows\WindowsUpdate" /f /v TargetReleaseVersion
+reg delete "HKEY_LOCAL_MACHINE\SOFTWARE\Policies\Microsoft\Windows\WindowsUpdate" /f /v TargetReleaseVersionInfo
+reg delete "HKEY_LOCAL_MACHINE\SOFTWARE\Policies\Microsoft\Windows\WindowsUpdate" /f /v ProductVersion
 reg delete "HKEY_LOCAL_MACHINE\SYSTEM\Setup\WindowsUpdate" /f /v AllowWindowsUpdate
 reg delete "HKEY_LOCAL_MACHINE\SYSTEM\Setup\MoSetup" /f /v AllowUpgradesWithUnsupportedTPMOrCPU
+reg delete "HKEY_LOCAL_MACHINE\SYSTEM\Setup\LabConfig" /f /v BypassCPUCheck
 reg delete "HKEY_LOCAL_MACHINE\SYSTEM\Setup\LabConfig" /f /v BypassRAMCheck
 reg delete "HKEY_LOCAL_MACHINE\SYSTEM\Setup\LabConfig" /f /v BypassSecureBootCheck
 reg delete "HKEY_LOCAL_MACHINE\SYSTEM\Setup\LabConfig" /f /v BypassStorageCheck
@@ -141,39 +189,49 @@ reg delete "HKEY_CURRENT_USER\SOFTWARE\Microsoft\PCHC" /f /v UpgradeEligibility
 goto :EOF
 
 :ADD_INSIDER_CONFIG
+sc.exe config DiagTrack start= auto
+sc.exe config wisvc start= demand
+schtasks /Change /ENABLE /TN "\Microsoft\Windows\Flighting\OneSettings\RefreshCache"
+schtasks /Change /ENABLE /TN "\Microsoft\Windows\Flighting\FeatureConfig\GovernedFeatureUsageProcessing"
+schtasks /Change /ENABLE /TN "\Microsoft\Windows\Flighting\FeatureConfig\ReconcileConfigs"
+schtasks /Change /ENABLE /TN "\Microsoft\Windows\Flighting\FeatureConfig\ReconcileFeatures"
+schtasks /Change /ENABLE /TN "\Microsoft\Windows\Flighting\FeatureConfig\SafeguardsReconciliation"
+schtasks /Change /ENABLE /TN "\Microsoft\Windows\Flighting\FeatureConfig\UsageDataReceiver"
+schtasks /Change /ENABLE /TN "\Microsoft\Windows\Flighting\FeatureConfig\UsageDataFlushing"
+reg add "HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\Policies\DataCollection" /f /t REG_DWORD /v AllowTelemetry /d 3
 reg add "HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\WindowsUpdate\Orchestrator" /f /t REG_DWORD /v EnableUUPScan /d 1
 reg add "HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\WindowsUpdate\SLS\Programs\Ring%Ring%" /f /t REG_DWORD /v Enabled /d 1
 reg add "HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\WindowsUpdate\SLS\Programs\WUMUDCat" /f /t REG_DWORD /v WUMUDCATEnabled /d 1
+reg add "HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\WindowsSelfHost\Applicability" /f /t REG_DWORD /v TestFlags /d 0x130
 reg add "HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\WindowsSelfHost\Applicability" /f /t REG_DWORD /v EnablePreviewBuilds /d 2
 reg add "HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\WindowsSelfHost\Applicability" /f /t REG_DWORD /v IsBuildFlightingEnabled /d 1
 reg add "HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\WindowsSelfHost\Applicability" /f /t REG_DWORD /v IsConfigSettingsFlightingEnabled /d 1
 reg add "HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\WindowsSelfHost\Applicability" /f /t REG_DWORD /v IsConfigExpFlightingEnabled /d 0
-reg add "HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\WindowsSelfHost\Applicability" /f /t REG_DWORD /v TestFlags /d 32
+reg add "HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\WindowsSelfHost\Applicability" /f /t REG_DWORD /v UseSettingsExperience /d 0
+reg add "HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\WindowsSelfHost\Applicability" /f /t REG_DWORD /v FlightUpgradeTarget /d %uiVersion%
 reg add "HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\WindowsSelfHost\Applicability" /f /t REG_DWORD /v RingId /d %RID%
 reg add "HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\WindowsSelfHost\Applicability" /f /t REG_SZ /v Ring /d "%Ring%"
 reg add "HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\WindowsSelfHost\Applicability" /f /t REG_SZ /v ContentType /d "%Content%"
 reg add "HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\WindowsSelfHost\Applicability" /f /t REG_SZ /v BranchName /d "%Channel%"
-if %build% LSS 21990 reg add "HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\WindowsSelfHost\UI\Strings" /f /t REG_SZ /v StickyXaml /d "<StackPanel xmlns="^""http://schemas.microsoft.com/winfx/2006/xaml/presentation"^""><TextBlock Style="^""{StaticResource BodyTextBlockStyle }"^"">´ËÉè±¸ÒÑÊ¹ÓÃ OfflineInsiderEnroll v%scriptver% ×¢²áµ½ Windows Ô¤ÀÀÌåÑé¼Æ»®¡£Èç¹ûÄúÏë¸ü¸Ä×¢²áÉèÖÃ»òÍ£Ö¹½ÓÊÕ Windows Insider ÄÚ²¿°æ±¾£¬ÇëÊ¹ÓÃ½Å±¾¡£<Hyperlink NavigateUri="^""https://github.com/abbodi1406/offlineinsiderenroll"^"" TextDecorations="^""None"^"">ÁË½â¸ü¶à</Hyperlink></TextBlock><TextBlock Text="^""Applied configuration"^"" Margin="^""0,20,0,10"^"" Style="^""{StaticResource SubtitleTextBlockStyle}"^"" /><TextBlock Style="^""{StaticResource BodyTextBlockStyle }"^"" Margin="^""0,0,0,5"^""><Run FontFamily="^""Segoe MDL2 Assets"^"">&#xECA7;</Run> <Span FontWeight="^""SemiBold"^"">%Fancy%</Span></TextBlock><TextBlock Text="^""Í¨µÀ: %Channel%"^"" Style="^""{StaticResource BodyTextBlockStyle }"^"" /><TextBlock Text="^""ÄÚÈİ: %Content%"^"" Style="^""{StaticResource BodyTextBlockStyle }"^"" /><TextBlock Text="^""Ò£²âÉèÖÃÍ¨Öª"^"" Margin="^""0,20,0,10"^"" Style="^""{StaticResource SubtitleTextBlockStyle}"^"" /><TextBlock Style="^""{StaticResource BodyTextBlockStyle }"^"">Windows Ô¤ÀÀÌåÑé¼Æ»®ĞèÒª½«ÄúµÄÕï¶ÏÊı¾İÊÕ¼¯ÉèÖÃÎª<Span FontWeight="^""SemiBold"^"">ÍêÕû</Span>¡£ Äú¿ÉÒÔÔÚ<Span FontWeight="^""SemiBold"^"">Õï¶Ï &amp; ·´À¡</Span> ÑéÖ¤»òĞŞ¸Äµ±Ç°ÉèÖÃ¡£</TextBlock><Button Command="^""{StaticResource ActivateUriCommand}"^"" CommandParameter="^""ms-settings:privacy-feedback"^"" Margin="^""0,10,0,0"^""><TextBlock Margin="^""5,0,5,0"^"">´ò¿ªÕï¶ÏºÍ·´À¡</TextBlock></Button></StackPanel>"
-reg add "HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\WindowsSelfHost\UI\Visibility" /f /t REG_DWORD /v UIHiddenElements /d 65535
-reg add "HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\WindowsSelfHost\UI\Visibility" /f /t REG_DWORD /v UIDisabledElements /d 65535
-reg add "HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\WindowsSelfHost\UI\Visibility" /f /t REG_DWORD /v UIServiceDrivenElementVisibility /d 0
-reg add "HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\WindowsSelfHost\UI\Visibility" /f /t REG_DWORD /v UIErrorMessageVisibility /d 192
-reg add "HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\Policies\DataCollection" /f /t REG_DWORD /v AllowTelemetry /d 3
-if defined BRL reg add "HKEY_LOCAL_MACHINE\SOFTWARE\Policies\Microsoft\Windows\WindowsUpdate" /f /t REG_DWORD /v BranchReadinessLevel /d %BRL%
-reg add "HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\WindowsSelfHost\UI\Visibility" /f /t REG_DWORD /v UIHiddenElements_Rejuv /d 65534
-reg add "HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\WindowsSelfHost\UI\Visibility" /f /t REG_DWORD /v UIDisabledElements_Rejuv /d 65535
-reg add "HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\WindowsSelfHost\UI\Selection" /f /t REG_SZ /v UIRing /d "%Ring%"
-reg add "HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\WindowsSelfHost\UI\Selection" /f /t REG_SZ /v UIContentType /d "%Content%"
-reg add "HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\WindowsSelfHost\UI\Selection" /f /t REG_SZ /v UIBranch /d "%Channel%"
-reg add "HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\WindowsSelfHost\UI\Selection" /f /t REG_DWORD /v UIOptin /d 1
 reg add "HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\WindowsSelfHost\Applicability" /f /t REG_SZ /v RingBackup /d "%Ring%"
 reg add "HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\WindowsSelfHost\Applicability" /f /t REG_SZ /v RingBackupV2 /d "%Ring%"
 reg add "HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\WindowsSelfHost\Applicability" /f /t REG_SZ /v BranchBackup /d "%Channel%"
-reg add "HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\WindowsSelfHost\Cache" /f /t REG_SZ /v PropertyIgnoreList /d "AccountsBlob;;CTACBlob;FlightIDBlob;ServiceDrivenActionResults"
+reg add "HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\WindowsSelfHost\Applicability" /f /t REG_SZ /v ContentBackup /d "%Content%"
+reg add "HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\WindowsSelfHost\UI\Selection" /f /t REG_SZ /v UIRing /d "%Ring%"
+reg add "HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\WindowsSelfHost\UI\Selection" /f /t REG_SZ /v UIContentType /d "%Content%"
+reg add "HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\WindowsSelfHost\UI\Selection" /f /t REG_SZ /v UIBranch /d "%uiBranch%"
+reg add "HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\WindowsSelfHost\UI\Selection" /f /t REG_DWORD /v UITargetVersion /d %uiVersion%
+reg add "HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\WindowsSelfHost\UI\Selection" /f /t REG_DWORD /v EulaAccepted /d 1
+reg add "HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\WindowsSelfHost\UI\Selection" /f /t REG_DWORD /v ReleasePreviewSelectable /d 1
+reg add "HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\WindowsSelfHost\UI\Selection" /f /t REG_DWORD /v AdvancedToggleState /d 0
+reg add "HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\WindowsSelfHost\UI\Selection" /f /t REG_DWORD /v OptOutState /d 0
+reg add "HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\WindowsSelfHost\UI\Selection" /f /t REG_DWORD /v UIDialogConsent /d 0
+reg add "HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\WindowsSelfHost\UI\Selection" /f /t REG_DWORD /v UIOptin /d 0
+reg add "HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\WindowsSelfHost\UI\Selection" /f /t REG_DWORD /v UIUsage /d 0
+reg add "HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\WindowsSelfHost\Cache" /f /t REG_SZ /v PropertyIgnoreList /d "AccountsBlob;CTACBlob;FlightIDBlob;ServiceDrivenActionResults;isVirtualMachine"
 reg add "HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\WindowsSelfHost\Cache" /f /t REG_SZ /v RequestedCTACAppIds /d "WU;FSS"
 reg add "HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\WindowsSelfHost\Account" /f /t REG_DWORD /v SupportedTypes /d 3
 reg add "HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\WindowsSelfHost\Account" /f /t REG_DWORD /v Status /d 8
-reg add "HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\WindowsSelfHost\Applicability" /f /t REG_DWORD /v UseSettingsExperience /d 0
 reg add "HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\WindowsSelfHost\ClientState" /f /t REG_DWORD /v AllowFSSCommunications /d 0
 reg add "HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\WindowsSelfHost\ClientState" /f /t REG_DWORD /v UICapabilities /d 1
 reg add "HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\WindowsSelfHost\ClientState" /f /t REG_DWORD /v IgnoreConsolidation /d 1
@@ -185,58 +243,112 @@ reg add "HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\WindowsSelfHost\ClientState" /f /
 reg add "HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\WindowsSelfHost\ClientState" /f /t REG_DWORD /v PilotInfoRing /d 3
 reg add "HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\WindowsSelfHost\ClientState" /f /t REG_DWORD /v RegistryAllowlistVersion /d 4
 reg add "HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\WindowsSelfHost\ClientState" /f /t REG_DWORD /v FileAllowlistVersion /d 1
+reg add "HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\WindowsSelfHost\ClientState" /f /t REG_DWORD /v DefaultedToChannels /d 1
+reg add "HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\WindowsSelfHost\ClientState" /f /t REG_DWORD /v UserDidOptOut /d 0
 reg add "HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\WindowsSelfHost\UI" /f /t REG_DWORD /v UIControllableState /d 0
-reg add "HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\WindowsSelfHost\UI\Selection" /f /t REG_DWORD /v UIDialogConsent /d 0
-reg add "HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\WindowsSelfHost\UI\Selection" /f /t REG_DWORD /v UIUsage /d 26
-reg add "HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\WindowsSelfHost\UI\Selection" /f /t REG_DWORD /v OptOutState /d 25
-reg add "HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\WindowsSelfHost\UI\Selection" /f /t REG_DWORD /v AdvancedToggleState /d 24
+reg add "HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\WindowsSelfHost\UI\Visibility" /f /t REG_DWORD /v UIHiddenElements /d 65535
+reg add "HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\WindowsSelfHost\UI\Visibility" /f /t REG_DWORD /v UIDisabledElements /d 65535
+reg add "HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\WindowsSelfHost\UI\Visibility" /f /t REG_DWORD /v UIServiceDrivenElementVisibility /d 0
+reg add "HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\WindowsSelfHost\UI\Visibility" /f /t REG_DWORD /v UIErrorMessageVisibility /d 192
+reg add "HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\WindowsSelfHost\UI\Visibility" /f /t REG_DWORD /v UIHiddenElements_Rejuv /d 65534
+reg add "HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\WindowsSelfHost\UI\Visibility" /f /t REG_DWORD /v UIDisabledElements_Rejuv /d 65535
+reg add "HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\WindowsSelfHost\OneSettings" /f /t REG_DWORD /v FlightSettingsVersion /d 2
+reg add "HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\WindowsSelfHost\OneSettings" /f /t REG_DWORD /v IsBuildUnsupported /d 0
 reg add "HKEY_LOCAL_MACHINE\SYSTEM\Setup\WindowsUpdate" /f /t REG_DWORD /v AllowWindowsUpdate /d 1
 reg add "HKEY_LOCAL_MACHINE\SYSTEM\Setup\MoSetup" /f /t REG_DWORD /v AllowUpgradesWithUnsupportedTPMOrCPU /d 1
 reg add "HKEY_LOCAL_MACHINE\SYSTEM\Setup\LabConfig" /f /t REG_DWORD /v BypassRAMCheck /d 1
 reg add "HKEY_LOCAL_MACHINE\SYSTEM\Setup\LabConfig" /f /t REG_DWORD /v BypassSecureBootCheck /d 1
-reg add "HKEY_LOCAL_MACHINE\SYSTEM\Setup\LabConfig" /f /t REG_DWORD /v BypassStorageCheck /d 1
 reg add "HKEY_LOCAL_MACHINE\SYSTEM\Setup\LabConfig" /f /t REG_DWORD /v BypassTPMCheck /d 1
 reg add "HKEY_CURRENT_USER\SOFTWARE\Microsoft\PCHC" /f /t REG_DWORD /v UpgradeEligibility /d 1
+(
+echo Windows Registry Editor Version 5.00
+echo.
+echo [HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\WindowsSelfHost\Cache]
+echo "BranchList"="{\"Branches\":[{\"Platform\":\"Windows.Desktop_0\",\"Name\":\"Beta\",\"Alias\":null,\"Description\":null,\"Migrate\":null,\"FlightingDisabled\":false,\"BranchRings\":[\"External\",\"Internal\"],\"RTMOnly\":false,\"ContentTypes\":[\"Mainline\"]},{\"Platform\":\"Windows.Desktop_0\",\"Name\":\"CanaryChannel\",\"Alias\":null,\"Description\":null,\"Migrate\":null,\"FlightingDisabled\":false,\"BranchRings\":[\"External\",\"Internal\"],\"RTMOnly\":false,\"ContentTypes\":[\"Mainline\"]},{\"Platform\":\"Windows.Desktop_0\",\"Name\":\"Dev\",\"Alias\":null,\"Description\":null,\"Migrate\":null,\"FlightingDisabled\":false,\"BranchRings\":[\"External\",\"Internal\"],\"RTMOnly\":false,\"ContentTypes\":[\"Mainline\"]},{\"Platform\":\"Windows.Desktop_0\",\"Name\":\"Experimental\",\"Alias\":\"Dev\",\"Description\":null,\"Migrate\":null,\"FlightingDisabled\":false,\"BranchRings\":[\"External\",\"Internal\"],\"RTMOnly\":false,\"ContentTypes\":[\"Mainline\"]},{\"Platform\":\"Windows.Desktop_0\",\"Name\":\"ReleasePreview\",\"Alias\":null,\"Description\":null,\"Migrate\":null,\"FlightingDisabled\":false,\"BranchRings\":[\"External\",\"Internal\"],\"RTMOnly\":false,\"ContentTypes\":[\"Mainline\"]},{\"Platform\":\"Windows.Desktop_0\",\"Name\":\"WindowsInnerRing\",\"Alias\":null,\"Description\":null,\"Migrate\":null,\"FlightingDisabled\":false,\"BranchRings\":[\"OSG\"],\"RTMOnly\":false,\"ContentTypes\":[\"Custom\"]}]}"
+echo "RingList"="{\"Rings\":[{\"Order\":\"0000000003\",\"Name\":\"WIF\",\"Alias\":\"Fast\",\"Description\":\"WIF\",\"Id\":\"10\",\"OptInDescription\":null},{\"Order\":\"0000000005\",\"Name\":\"WIS\",\"Alias\":\"Slow\",\"Description\":\"WIS\",\"Id\":\"9\",\"OptInDescription\":null},{\"Order\":\"0000000015\",\"Name\":\"RP\",\"Alias\":\"Release Preview\",\"Description\":\"RP\",\"Id\":\"8\",\"OptInDescription\":null},{\"Order\":\"0000000016\",\"Name\":\"External\",\"Alias\":\"External\",\"Description\":\"External\",\"Id\":\"11\",\"OptInDescription\":null},{\"Order\":\"0000000017\",\"Name\":\"Internal\",\"Alias\":\"Internal\",\"Description\":\"Internal\",\"Id\":\"30\",\"OptInDescription\":null},{\"Order\":\"0000000018\",\"Name\":\"OSG\",\"Alias\":\"OSG\",\"Description\":\"OSG\",\"Id\":\"26\",\"OptInDescription\":null}]}"
+echo "ConfigurationOptionList"="{\"ConfigurationOptionList\":[{\"Name\":\"Experimental\",\"Alias\":\"Experimental Channel\",\"Description\":\"è·å–æ­£åœ¨ç§¯æå¼€å‘ä¸­çš„åŠŸèƒ½çš„æ—©æœŸè®¿é—®æƒé™ã€‚è¿™äº›æ›´æ”¹å¯èƒ½ä¼šå‘ç”Ÿæ¼”å˜ã€è¢«å»¶è¿Ÿæˆ–ä¸ä¼šå‘å¸ƒã€‚\",\"ContentType\":\"Mainline\",\"Branch\":\"Dev\",\"Ring\":\"External\",\"IsRecommended\":false,\"RecommendedOnly\":false,\"IsValid\":false,\"Title\":\"Experimental\",\"Warning\":\"\"},{\"Name\":\"CanaryChannel\",\"Alias\":\"Canary Channel\",\"Description\":\"å¯èƒ½å½±å“ç¨³å®šæ€§çš„åŸºç¡€å¹³å°å’Œå†…æ ¸æ›´æ–°ã€‚æ–°åŠŸèƒ½å¯èƒ½ä¼šåœ¨å…¶ä»–ç‰ˆæœ¬ä¸­ç¨åæ¨å‡ºã€‚\",\"ContentType\":\"Mainline\",\"Branch\":\"CanaryChannel\",\"Ring\":\"External\",\"IsRecommended\":false,\"RecommendedOnly\":false,\"IsValid\":false,\"Title\":\"Canary\",\"Warning\":\"\"},{\"Name\":\"Dev\",\"Alias\":\"Dev Channel\",\"Description\":\"è·å–å³å°†æ¨å‡ºçš„ Windows åŠŸèƒ½å’Œæ“ä½œç³»ç»Ÿæ”¹è¿›çš„æ—©æœŸè®¿é—®æƒé™ã€‚\",\"ContentType\":\"Mainline\",\"Branch\":\"Dev\",\"Ring\":\"External\",\"IsRecommended\":false,\"RecommendedOnly\":false,\"IsValid\":false,\"Title\":\"Dev\",\"Warning\":\"\"},{\"Name\":\"Beta\",\"Alias\":\"Beta Channel\",\"Description\":\"åœ¨å¹¿æ³›å‘å¸ƒä¹‹å‰é¢„è§ˆæ¥è¿‘å®Œæˆçš„ä¿®å¤å’ŒåŠŸèƒ½ã€‚\",\"ContentType\":\"Mainline\",\"Branch\":\"Beta\",\"Ring\":\"External\",\"IsRecommended\":false,\"RecommendedOnly\":false,\"IsValid\":false,\"Title\":\"Beta\",\"Warning\":\"\"},{\"Name\":\"ReleasePreview\",\"Alias\":\"Release Preview\",\"Description\":\"å¦‚æœæ‚¨æƒ³é¢„è§ˆä¿®å¤å’ŒæŸäº›å…³é”®åŠŸèƒ½ï¼Œå¹¶å¯é€‰æ‹©åœ¨ä¸‹ä¸€ç‰ˆ Windows å‘å…¨çƒæ­£å¼å‘å¸ƒä¹‹å‰è·å–è®¿é—®æƒé™ï¼Œè¿™æ˜¯ç†æƒ³ä¹‹é€‰ã€‚æ­¤é¢‘é“ä¹Ÿæ¨èç»™å•†ä¸šç”¨æˆ·ä½¿ç”¨ã€‚\",\"ContentType\":\"Mainline\",\"Branch\":\"ReleasePreview\",\"Ring\":\"External\",\"IsRecommended\":false,\"RecommendedOnly\":false,\"IsValid\":false,\"Title\":\"Release Preview\",\"Warning\":\"\"},{\"Name\":\"WindowsInnerRing\",\"Alias\":\"Windows Inner Ring\",\"Description\":\"æœ€æ—©çš„å†…éƒ¨åŠŸèƒ½å’Œå®éªŒæ€§å·¥ä½œã€‚\",\"ContentType\":\"Custom\",\"Branch\":\"WindowsInnerRing\",\"Ring\":\"OSG\",\"IsRecommended\":false,\"RecommendedOnly\":false,\"IsValid\":false,\"Title\":\"InnerRing\",\"Warning\":\"\"}]}"
+echo "ContentList"="{\"ContentList\":[{\"Name\":\"Mainline\",\"Alias\":\"Channels\",\"Description\":\"Channels\",\"OptInDescription\":\"é€‰æ‹©æ‚¨å¸Œæœ›æ¥æ”¶æ›´æ–°çš„é¢‘é“ã€‚\",\"ContentRings\":[\"External\"],\"RTMOnly\":false,\"ErrorMessage\":null,\"DefaultRing\":\"External\",\"CanSwitch\":false},{\"Name\":\"Custom\",\"Alias\":\"Custom\",\"Description\":\"Custom\",\"OptInDescription\":\"è‡ªå®šä¹‰é€‰é¡¹ã€‚\",\"ContentRings\":[\"OSG\"],\"RTMOnly\":false,\"ErrorMessage\":null,\"DefaultRing\":\"OSG\",\"CanSwitch\":false}],\"DefaultSelectionName\":\"Mainline\"}"
+echo "CustomConfigurationOption"="\"\\\"æ‚¨çš„è®¾å¤‡å·²è®¾ç½®ä¸ºè‡ªå®šä¹‰é…ç½®ã€‚\\\\nå†…å®¹: FlightingContracts.DataContracts.Content\\\\nåˆ†æ”¯: %Channel%\\\\né€šé“: %Ring%\\\"\""
+echo.
+)>"%SystemRoot%\oic.reg"
+powershell -NoProfile -Command "[IO.File]::WriteAllText('%SystemRoot%\oic.reg', [IO.File]::ReadAllText('%SystemRoot%\oic.reg', [System.Text.Encoding]::UTF8), [System.Text.Encoding]::Unicode)"
+reg.exe import "%SystemRoot%\oic.reg"
+del /f /q "%SystemRoot%\oic.reg"
+if %build% LSS 21990 reg add "HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\WindowsSelfHost\UI\Strings" /f /t REG_SZ /v StickyXaml /d "<StackPanel xmlns="^""http://schemas.microsoft.com/winfx/2006/xaml/presentation"^""><TextBlock Style="^""{StaticResource BodyTextBlockStyle }"^"">æ­¤è®¾å¤‡å·²ä½¿ç”¨ OfflineInsiderEnroll v%scriptver% æ³¨å†Œåˆ° Windows é¢„è§ˆä½“éªŒè®¡åˆ’ã€‚å¦‚æœæ‚¨æƒ³æ›´æ”¹æ³¨å†Œè®¾ç½®æˆ–åœæ­¢æ¥æ”¶é¢„è§ˆç‰ˆæ›´æ–°ï¼Œè¯·ä½¿ç”¨è¯¥è„šæœ¬ã€‚<Hyperlink NavigateUri="^""https://github.com/abbodi1406/offlineinsiderenroll"^"" TextDecorations="^""None"^"">äº†è§£æ›´å¤š</Hyperlink></TextBlock><TextBlock Text="^""å·²åº”ç”¨çš„é…ç½®"^"" Margin="^""0,20,0,10"^"" Style="^""{StaticResource SubtitleTextBlockStyle}"^"" /><TextBlock Style="^""{StaticResource BodyTextBlockStyle }"^"" Margin="^""0,0,0,5"^""><Run FontFamily="^""Segoe MDL2 Assets"^"">&#xECA7;</Run> <Span FontWeight="^""SemiBold"^"">%Fancy%</Span></TextBlock><TextBlock Text="^""é¢‘é“: %uiChannel%"^"" Style="^""{StaticResource BodyTextBlockStyle }"^"" /><TextBlock Text="^""å†…å®¹: %Content%"^"" Style="^""{StaticResource BodyTextBlockStyle }"^"" /><TextBlock Text="^""é¥æµ‹è®¾ç½®é€šçŸ¥"^"" Margin="^""0,20,0,10"^"" Style="^""{StaticResource SubtitleTextBlockStyle}"^"" /><TextBlock Style="^""{StaticResource BodyTextBlockStyle }"^"">Windows é¢„è§ˆä½“éªŒè®¡åˆ’è¦æ±‚å°†æ‚¨çš„è¯Šæ–­æ•°æ®æ”¶é›†è®¾ç½®è®¾ä¸º <Span FontWeight="^""SemiBold"^"">å®Œæ•´</Span>ã€‚æ‚¨å¯ä»¥åœ¨ <Span FontWeight="^""SemiBold"^"">è¯Šæ–­å’Œåé¦ˆ</Span> ä¸­éªŒè¯æˆ–ä¿®æ”¹å½“å‰è®¾ç½®ã€‚</TextBlock><Button Command="^""{StaticResource ActivateUriCommand}"^"" CommandParameter="^""ms-settings:privacy-feedback"^"" Margin="^""0,10,0,0"^""><TextBlock Margin="^""5,0,5,0"^"">æ‰“å¼€è¯Šæ–­å’Œåé¦ˆ</TextBlock></Button></StackPanel>"
 if %build% LSS 21990 goto :EOF
 (
 echo Windows Registry Editor Version 5.00
 echo.
 echo [HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\WindowsSelfHost\UI\Strings]
-echo "StickyMessage"="{\"Message\":\"Éè±¸ÒÑÊ¹ÓÃ OfflineInsiderEnroll ×¢²á\",\"LinkTitle\":\"\",\"LinkUrl\":\"\",\"DynamicXaml\":\"^<StackPanel xmlns=\\\"http://schemas.microsoft.com/winfx/2006/xaml/presentation\\\"^>^<TextBlock Style=\\\"{StaticResource BodyTextBlockStyle }\\\"^>´ËÉè±¸ÒÑÊ¹ÓÃ OfflineInsiderEnroll v%scriptver% ×¢²áµ½ Windows Ô¤ÀÀÌåÑé¼Æ»®¡£Èç¹ûÄúÏë¸ü¸Ä×¢²áÉèÖÃ»òÍ£Ö¹½ÓÊÕ Windows Insider ÄÚ²¿°æ±¾£¬ÇëÊ¹ÓÃ½Å±¾¡£ ^<Hyperlink NavigateUri=\\\"https://github.com/abbodi1406/offlineinsiderenroll\\\" TextDecorations=\\\"None\\\"^>ÁË½â¸ü¶à^</Hyperlink^>^</TextBlock^>^<TextBlock Text=\\\"ÒÑÓ¦ÓÃµÄÅäÖÃ\\\" Margin=\\\"0,20,0,10\\\" Style=\\\"{StaticResource SubtitleTextBlockStyle}\\\" /^>^<TextBlock Style=\\\"{StaticResource BodyTextBlockStyle }\\\" Margin=\\\"0,0,0,5\\\"^>^<Run FontFamily=\\\"Segoe MDL2 Assets\\\"^>^&#xECA7;^</Run^> ^<Span FontWeight=\\\"SemiBold\\\"^>%Fancy%^</Span^>^</TextBlock^>^<TextBlock Text=\\\"Í¨µÀ: %Channel%\\\" Style=\\\"{StaticResource BodyTextBlockStyle }\\\" /^>^<TextBlock Text=\\\"ÄÚÈİ: %Content%\\\" Style=\\\"{StaticResource BodyTextBlockStyle }\\\" /^>^<TextBlock Text=\\\"Ò£²âÉèÖÃÍ¨Öª\\\" Margin=\\\"0,20,0,10\\\" Style=\\\"{StaticResource SubtitleTextBlockStyle}\\\" /^>^<TextBlock Style=\\\"{StaticResource BodyTextBlockStyle }\\\"^>Windows Ô¤ÀÀÌåÑé¼Æ»®ĞèÒª½«ÄúµÄÕï¶ÏÊı¾İÊÕ¼¯ÉèÖÃÎª^<Span FontWeight=\\\"SemiBold\\\"^>ÍêÕû^</Span^>¡£ Äú¿ÉÒÔÔÚ^<Span FontWeight=\\\"SemiBold\\\"^>Õï¶Ï ^&amp; ·´À¡^</Span^>ÑéÖ¤»òĞŞ¸Äµ±Ç°ÉèÖÃ¡£ ^</TextBlock^>^<Button Command=\\\"{StaticResource ActivateUriCommand}\\\" CommandParameter=\\\"ms-settings:privacy-feedback\\\" Margin=\\\"0,10,0,0\\\"^>^<TextBlock Margin=\\\"5,0,5,0\\\"^>´ò¿ªÕï¶ÏºÍ·´À¡^</TextBlock^>^</Button^>^</StackPanel^>\",\"Severity\":0}"
+echo "StickyMessage"="{\"Message\":\"ä½¿ç”¨ OfflineInsiderEnroll æ³¨å†Œçš„è®¾å¤‡\",\"LinkTitle\":\"\",\"LinkUrl\":\"\",\"DynamicXaml\":\"^<StackPanel xmlns=\\\"http://schemas.microsoft.com/winfx/2006/xaml/presentation\\\"^>^<TextBlock Style=\\\"{StaticResource BodyTextBlockStyle }\\\"^>æ­¤è®¾å¤‡å·²ä½¿ç”¨ OfflineInsiderEnroll v%scriptver% æ³¨å†Œåˆ° Windows é¢„è§ˆä½“éªŒè®¡åˆ’ã€‚å¦‚æœæ‚¨æƒ³æ›´æ”¹æ³¨å†Œè®¾ç½®æˆ–åœæ­¢æ¥æ”¶é¢„è§ˆç‰ˆæ›´æ–°ï¼Œè¯·ä½¿ç”¨è¯¥è„šæœ¬ã€‚ ^<Hyperlink NavigateUri=\\\"https://github.com/abbodi1406/offlineinsiderenroll\\\" TextDecorations=\\\"None\\\"^>äº†è§£æ›´å¤š^</Hyperlink^>^</TextBlock^>^<TextBlock Text=\\\"å·²åº”ç”¨çš„é…ç½®\\\" Margin=\\\"0,20,0,10\\\" Style=\\\"{StaticResource SubtitleTextBlockStyle}\\\" /^>^<TextBlock Style=\\\"{StaticResource BodyTextBlockStyle }\\\" Margin=\\\"0,0,0,5\\\"^>^<Run FontFamily=\\\"Segoe MDL2 Assets\\\"^>^&#xECA7;^</Run^> ^<Span FontWeight=\\\"SemiBold\\\"^>%Fancy%^</Span^>^</TextBlock^>^<TextBlock Text=\\\"é¢‘é“: %uiChannel%\\\" Style=\\\"{StaticResource BodyTextBlockStyle }\\\" /^>^<TextBlock Text=\\\"å†…å®¹: %Content%\\\" Style=\\\"{StaticResource BodyTextBlockStyle }\\\" /^>^<TextBlock Text=\\\"é¥æµ‹è®¾ç½®é€šçŸ¥\\\" Margin=\\\"0,20,0,10\\\" Style=\\\"{StaticResource SubtitleTextBlockStyle}\\\" /^>^<TextBlock Style=\\\"{StaticResource BodyTextBlockStyle }\\\"^>Windows é¢„è§ˆä½“éªŒè®¡åˆ’è¦æ±‚å°†æ‚¨çš„è¯Šæ–­æ•°æ®æ”¶é›†è®¾ç½®è®¾ä¸º ^<Span FontWeight=\\\"SemiBold\\\"^>å®Œæ•´^</Span^>ã€‚æ‚¨å¯ä»¥åœ¨ ^<Span FontWeight=\\\"SemiBold\\\"^>è¯Šæ–­å’Œåé¦ˆ^</Span^> ä¸­éªŒè¯æˆ–ä¿®æ”¹å½“å‰è®¾ç½®ã€‚^</TextBlock^>^<Button Command=\\\"{StaticResource ActivateUriCommand}\\\" CommandParameter=\\\"ms-settings:privacy-feedback\\\" Margin=\\\"0,10,0,0\\\"^>^<TextBlock Margin=\\\"5,0,5,0\\\"^>æ‰“å¼€è¯Šæ–­å’Œåé¦ˆ^</TextBlock^>^</Button^>^</StackPanel^>\",\"Severity\":0}"
 echo.
 )>"%SystemRoot%\oie.reg"
+powershell -NoProfile -Command "[IO.File]::WriteAllText('%SystemRoot%\oie.reg', [IO.File]::ReadAllText('%SystemRoot%\oie.reg', [System.Text.Encoding]::UTF8), [System.Text.Encoding]::Unicode)"
 reg.exe import "%SystemRoot%\oie.reg"
 del /f /q "%SystemRoot%\oie.reg"
 goto :EOF
 
-:ENROLL
-echo ÕıÔÚÓ¦ÓÃ¸ü¸Ä...
+:REFRESH_WU
+echo æ­£åœ¨åº”ç”¨æ›´æ”¹...
+call :RESET_WU 1>NUL 2>NUL
+echo å®Œæˆã€‚
+echo.
+echo æŒ‰ä»»æ„é”®é€€å‡º...
+pause >nul
+goto :EOF
+
+:RESET_WU
+net.exe stop wisvc /y
+net.exe stop usosvc /y
+cmd /c sc.exe stop usosvc
+net.exe stop wuauserv /y
+cmd /c sc.exe stop wuauserv
+del /f /q "%ProgramData%\USOPrivate\UpdateStore\*"
+del /s /f /q "%ProgramData%\USOShared\Logs\*"
+net.exe start wuauserv /y
+cmd /c sc.exe start wuauserv
+net.exe start usosvc /y
+cmd /c sc.exe start usosvc
+net.exe start wisvc /y
+cmd /c UsoClient.exe RefreshSettings
+goto :EOF
+
+:doENROLL
+echo æ­£åœ¨åº”ç”¨æ›´æ”¹...
 call :RESET_INSIDER_CONFIG 1>NUL 2>NUL
 call :ADD_INSIDER_CONFIG 1>NUL 2>NUL
 bcdedit /set {current} flightsigning yes >nul 2>&1
-echo Íê³É¡£
+echo å®Œæˆã€‚
 
 echo.
 if %FlightSigningEnabled% neq 1 goto :ASK_FOR_REBOOT
-echo °´ÈÎÒâ¼üÍË³ö¡£
+echo æŒ‰ä»»æ„é”®é€€å‡º...
 pause >nul
 goto :EOF
 
 :STOP_INSIDER
-echo ÕıÔÚÓ¦ÓÃ¸ü¸Ä...
+echo æ­£åœ¨åº”ç”¨æ›´æ”¹...
 call :RESET_INSIDER_CONFIG 1>nul 2>nul
+if %cleanup% equ 1 (
 bcdedit /deletevalue {current} flightsigning >nul 2>&1
-echo Íê³É¡£
+reg add "HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\WindowsSelfHost\ClientState" /f /t REG_DWORD /v UserDidOptOut /d 1 >nul 2>&1
+reg add "HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\WindowsSelfHost\UI\Selection" /f /t REG_DWORD /v OptOutState /d 25 >nul 2>&1
+) else (
+reg add "HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\WindowsSelfHost\Applicability" /f /t REG_DWORD /v TestFlags /d 0x100 >nul 2>&1
+reg add "HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\WindowsSelfHost\ClientState" /f /t REG_DWORD /v UserDidOptOut /d 0 >nul 2>&1
+reg add "HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\WindowsSelfHost\UI\Selection" /f /t REG_DWORD /v OptOutState /d 0 >nul 2>&1
+)
+echo å®Œæˆã€‚
 
 echo.
-if %FlightSigningEnabled% neq 0 goto :ASK_FOR_REBOOT
-echo °´ÈÎÒâ¼üÍË³ö¡£
+if %cleanup% equ 1 if %FlightSigningEnabled% neq 0 goto :ASK_FOR_REBOOT
+echo æŒ‰ä»»æ„é”®é€€å‡º...
 pause >nul
 goto :EOF
 
 :ASK_FOR_REBOOT
 set "choice="
-echo ĞèÒªÖØĞÂÆô¶¯²ÅÄÜÓ¦ÓÃ¸ü¸Ä¡£
-set /p choice="ÄãÏëÖØĞÂÆô¶¯ÄãµÄµçÄÔÂğ? (y/N) "
+echo å¿…é¡»é‡æ–°å¯åŠ¨è®¡ç®—æœºæ‰èƒ½å®Œæˆæ›´æ”¹ã€‚
+set /p choice="æ‚¨æƒ³è¦ç°åœ¨é‡å¯ç”µè„‘å—ï¼Ÿ(y/N) "
 if /I "%choice%"=="y" shutdown -r -t 0
 goto :EOF
